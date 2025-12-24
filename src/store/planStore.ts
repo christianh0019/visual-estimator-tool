@@ -13,7 +13,9 @@ export interface PlacedBlock extends RoomBlock {
 
 interface PlanState {
     placedBlocks: PlacedBlock[];
-    totalCost: number;
+    totalCost: number; // Deprecated, but kept for compatibility
+    totalCostLow: number;
+    totalCostHigh: number;
     totalSqFt: number;
     activeFloor: number;
     pendingDrop: { block: RoomBlock, clientX: number, clientY: number } | null;
@@ -30,13 +32,21 @@ interface PlanState {
 
 // Helper to recalculate totals
 const calculateTotals = (blocks: PlacedBlock[]) => {
-    const totalCost = blocks.reduce((acc, b) => acc + b.baseCost, 0);
+    const baseTotal = blocks.reduce((acc, b) => acc + b.baseCost, 0);
     // Assuming 1 grid unit = 2ft, so 1x1 unit = 4 sqft
     const totalSqFt = blocks.reduce((acc, b) => acc + (b.dimensions.w * 2 * b.dimensions.h * 2), 0);
 
+    // Pricing Logic
+    // Low: Base Cost (Economy finishes)
+    // High: Base Cost * 1.45 (Luxury finishes, ~45% markup)
+    const totalCostLow = baseTotal;
+    const totalCostHigh = Math.round(baseTotal * 1.45);
+
     return {
         placedBlocks: blocks,
-        totalCost,
+        totalCost: baseTotal, // Keep legacy for compatibility if needed, using Low for display
+        totalCostLow,
+        totalCostHigh,
         totalSqFt
     };
 };
@@ -46,6 +56,8 @@ export const usePlanStore = create<PlanState>()(
         (set) => ({
             placedBlocks: [],
             totalCost: 0,
+            totalCostLow: 0,
+            totalCostHigh: 0,
             totalSqFt: 0,
             activeFloor: 0,
             pendingDrop: null,
@@ -85,7 +97,7 @@ export const usePlanStore = create<PlanState>()(
                 return calculateTotals(newBlocks);
             }),
 
-            resetPlan: () => set({ placedBlocks: [], totalCost: 0, totalSqFt: 0 })
+            resetPlan: () => set({ placedBlocks: [], totalCost: 0, totalCostLow: 0, totalCostHigh: 0, totalSqFt: 0 })
         }),
         {
             name: 'builder-plan-storage',
