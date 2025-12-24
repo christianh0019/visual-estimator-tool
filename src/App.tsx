@@ -13,6 +13,7 @@ function App() {
   const totalSqFt = usePlanStore(state => state.totalSqFt);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<'ISO' | 'TOP'>('ISO');
 
   const handleDragEnd = (event: DragEndEvent) => {
     // ... existing drag logic ...
@@ -69,16 +70,7 @@ function App() {
         {/* HUD / Header */}
         <div className="fixed top-4 left-4 right-4 md:top-6 md:right-6 md:left-auto z-40 flex flex-col md:flex-row items-end gap-4 pointer-events-none">
 
-          {/* Mobile Menu Button - Pointer events auto to allow clicking */}
-          <div className="w-full flex justify-between md:hidden pointer-events-auto">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="bg-white p-3 rounded-xl shadow-lg border border-slate-200 text-slate-700 active:scale-95 transition-transform"
-            >
-              <Menu size={24} />
-            </button>
-          </div>
-
+          {/* Cost HUD & Save Plan Buttons are here */}
           <div className="flex items-center gap-4 pointer-events-auto">
             <div className="bg-white/90 backdrop-blur border border-slate-200 p-3 md:p-4 rounded-xl shadow-lg flex gap-4 md:gap-8">
               <div>
@@ -99,8 +91,18 @@ function App() {
           </div>
         </div>
 
-        <HeadsUpDisplay />
-        <Scene />
+        {/* Mobile Menu Button - Pointer events auto to allow clicking */}
+        <div className="w-full flex justify-between md:hidden pointer-events-auto absolute top-4 left-4 z-50">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="bg-white p-3 rounded-xl shadow-lg border border-slate-200 text-slate-700 active:scale-95 transition-transform"
+          >
+            <Menu size={24} />
+          </button>
+        </div>
+
+        <HeadsUpDisplay currentView={currentView} onViewChange={setCurrentView} />
+        <Scene currentView={currentView} />
       </div>
     </DndContext>
   );
