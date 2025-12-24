@@ -33,26 +33,54 @@ const DraggableBlock = ({ block }: { block: RoomBlock }) => {
     );
 };
 
-export const Sidebar = () => {
-    const categories = ['living', 'sleeping', 'utility'];
+// ... imports
+import { X } from 'lucide-react';
+
+interface SidebarProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+    const categories = ['living', 'sleeping', 'utility', 'outdoor'];
 
     return (
-        <div className="w-80 bg-white border-r border-slate-200 h-screen overflow-y-auto p-6 fixed left-0 top-0 z-10 shadow-xl">
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-slate-800">Builder<span className="text-indigo-600">Block</span></h1>
-                <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mt-1">Estimation Tool</p>
-            </div>
+        <>
+            {/* Mobile Backdrop */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/20 z-40 md:hidden"
+                    onClick={onClose}
+                />
+            )}
 
-            <div className="space-y-8">
-                {categories.map(cat => (
-                    <div key={cat}>
-                        <h3 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">{cat}</h3>
-                        {ROOM_BLOCKS.filter(b => b.category === cat).map(block => (
-                            <DraggableBlock key={block.id} block={block} />
-                        ))}
+            <div className={`
+                w-80 bg-white border-r border-slate-200 h-screen overflow-y-auto p-6 fixed left-0 top-0 z-50 shadow-xl
+                transition-transform duration-300 ease-in-out
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
+                md:translate-x-0
+            `}>
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-800">Builder<span className="text-indigo-600">Block</span></h1>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mt-1">Estimation Tool</p>
                     </div>
-                ))}
+                    <button onClick={onClose} className="md:hidden text-slate-400 hover:text-slate-600">
+                        <X size={24} />
+                    </button>
+                </div>
+
+                <div className="space-y-8">
+                    {categories.map(cat => (
+                        <div key={cat}>
+                            <h3 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">{cat}</h3>
+                            {ROOM_BLOCKS.filter(b => b.category === cat).map(block => (
+                                <DraggableBlock key={block.id} block={block} />
+                            ))}
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
+        </>
     );
 };
