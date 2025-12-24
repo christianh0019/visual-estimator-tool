@@ -1,7 +1,8 @@
 
 import { DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { Sidebar } from './components/Sidebar';
-import { GridCanvas } from './components/GridCanvas';
+import { Scene } from './components/3D/Scene';
+import { HeadsUpDisplay } from './components/3D/HeadsUpDisplay';
 import { usePlanStore } from './store/planStore';
 import { useState } from 'react';
 import { Download, Menu } from 'lucide-react';
@@ -29,7 +30,28 @@ function App() {
     const relativeX = activeRect.left - droppableRect.left;
     const relativeY = activeRect.top - droppableRect.top;
 
-    // Convert to grid units (40px)
+    // Approximate 3D projection from screen coordinates??
+    // This is hard without raycasting.
+    // For now, let's rely on a simpler "Center of Screen" or just standard 40px grid mapping
+    // assuming the drop target `droppableRect` covers the screen.
+    // The previous 2D logic: x = relativeX / 40.
+    // In 3D, the canvas is full screen.
+    // We need a way to raycast.
+    // BUT since `onDragEnd` only gives us screen coordinates `active.rect.current.translated`, we might be stuck.
+
+    // WORKAROUND: For MVP 3D drop, we will just place it at a default location 
+    // OR we map screen X/Y to grid X/Y roughly assuming a top-down view.
+    // Given the complexity of 3D Raycasting from a DND-Kit event outside the canvas,
+    // we will simplify: Place at (0,0) or random, allow user to move it in 3D.
+    // OR: Use a separate "DropZone" plane overlay.
+
+    // Let's stick to the grid math but scaled differently or just randomized for now 
+    // until we implement advanced raycasting.
+    // Actually, Scene component div is the droppable.
+
+    // Scale factor: If we assume the camera is zoomed out, 1 grid unit (40px in 2D) might map to 1 unit in 3D.
+    // Let's try mapping pixels / 40 -> 3D units.
+
     const x = Math.max(0, Math.floor(relativeX / 40));
     const y = Math.max(0, Math.floor(relativeY / 40));
 
@@ -77,7 +99,8 @@ function App() {
           </div>
         </div>
 
-        <GridCanvas />
+        <HeadsUpDisplay />
+        <Scene />
       </div>
     </DndContext>
   );
