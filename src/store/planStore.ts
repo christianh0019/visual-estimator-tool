@@ -16,59 +16,17 @@ interface PlanState {
     totalCost: number;
     totalSqFt: number;
     activeFloor: number;
+    pendingDrop: { block: RoomBlock, clientX: number, clientY: number } | null;
 
     setActiveFloor: (floor: number) => void;
+    setPendingDrop: (drop: { block: RoomBlock, clientX: number, clientY: number } | null) => void;
+
     addBlock: (block: RoomBlock, x: number, y: number) => void;
     removeBlock: (instanceId: string) => void;
     moveBlock: (instanceId: string, x: number, y: number) => void;
     rotateBlock: (instanceId: string) => void;
     resetPlan: () => void;
 }
-
-export const usePlanStore = create<PlanState>()(persist((set) => ({
-    placedBlocks: [],
-    totalCost: 0,
-    totalSqFt: 0,
-    activeFloor: 0,
-
-    setActiveFloor: (floor) => set({ activeFloor: floor }),
-
-    addBlock: (block, x, y) => set((state) => {
-        const newBlock: PlacedBlock = {
-            ...block,
-            instanceId: Math.random().toString(36).substr(2, 9),
-            x,
-            y,
-            floor: state.activeFloor,
-            rotation: 0
-        };
-        const newBlocks = [...state.placedBlocks, newBlock];
-        return calculateTotals(newBlocks);
-    }),
-
-    removeBlock: (instanceId) => set((state) => {
-        const newBlocks = state.placedBlocks.filter(b => b.instanceId !== instanceId);
-        return calculateTotals(newBlocks);
-    }),
-
-    moveBlock: (instanceId, x, y) => set((state) => {
-        const newBlocks = state.placedBlocks.map(b =>
-            b.instanceId === instanceId ? { ...b, x, y } : b
-        );
-        return calculateTotals(newBlocks);
-    }),
-
-    rotateBlock: (instanceId) => set((state) => {
-        const newBlocks = state.placedBlocks.map(b =>
-            b.instanceId === instanceId ? { ...b, rotation: (b.rotation + 90) % 360 } : b
-        );
-        return calculateTotals(newBlocks);
-    }),
-
-    resetPlan: () => set({ placedBlocks: [], totalCost: 0, totalSqFt: 0 })
-}), {
-    name: 'builder-plan-storage',
-}));
 
 // Helper to recalculate totals
 const calculateTotals = (blocks: PlacedBlock[]) => {
@@ -82,3 +40,55 @@ const calculateTotals = (blocks: PlacedBlock[]) => {
         totalSqFt
     };
 };
+
+export const usePlanStore = create<PlanState>()(
+    persist(
+        (set) => ({
+            placedBlocks: [],
+            totalCost: 0,
+            totalSqFt: 0,
+            activeFloor: 0,
+            pendingDrop: null,
+
+            setActiveFloor: (floor) => set({ activeFloor: floor }),
+            setPendingDrop: (drop) => set({ pendingDrop: drop }),
+
+            addBlock: (block, x, y) => set((state) => {
+                const newBlock: PlacedBlock = {
+                    ...block,
+                    instanceId: Math.random().toString(36).substr(2, 9),
+                    x,
+                    y,
+                    floor: state.activeFloor,
+                    rotation: 0
+                };
+                const newBlocks = [...state.placedBlocks, newBlock];
+                return calculateTotals(newBlocks);
+            }),
+
+            removeBlock: (instanceId) => set((state) => {
+                const newBlocks = state.placedBlocks.filter(b => b.instanceId !== instanceId);
+                return calculateTotals(newBlocks);
+            }),
+
+            moveBlock: (instanceId, x, y) => set((state) => {
+                const newBlocks = state.placedBlocks.map(b =>
+                    b.instanceId === instanceId ? { ...b, x, y } : b
+                );
+                return calculateTotals(newBlocks);
+            }),
+
+            rotateBlock: (instanceId) => set((state) => {
+                const newBlocks = state.placedBlocks.map(b =>
+                    b.instanceId === instanceId ? { ...b, rotation: (b.rotation + 90) % 360 } : b
+                );
+                return calculateTotals(newBlocks);
+            }),
+
+            resetPlan: () => set({ placedBlocks: [], totalCost: 0, totalSqFt: 0 })
+        }),
+        {
+            name: 'builder-plan-storage',
+        }
+    )
+);
