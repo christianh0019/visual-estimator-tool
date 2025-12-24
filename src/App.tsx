@@ -7,34 +7,34 @@ import { Download } from 'lucide-react';
 
 function App() {
   const addBlock = usePlanStore(state => state.addBlock);
-  const { totalCost, totalSqFt } = usePlanStore(state => ({
-    totalCost: state.totalCost,
-    totalSqFt: state.totalSqFt
-  }));
+  const totalCost = usePlanStore(state => state.totalCost);
+  const totalSqFt = usePlanStore(state => state.totalSqFt);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (over && over.id === 'canvas') {
-      // Logic to snap to grid
-      const blockData = active.data.current?.block;
-      if (!blockData) return;
+    const blockData = active.data.current?.block;
+    if (!blockData) return;
 
-      // In a real app, calculate X/Y based on mouse position relative to canvas
-      // For MVP, just placing at a pseudo-random or fixed spot, 
-      // OR better: we need the delta. 
-      // Since getting drop coordinates is tricky without `useDraggable` positioning context, 
-      // we'll simulate a simple stack or "next available" logic if specific coords aren't passed,
-      // BUT for a true drag and drop we need pointer coordinates.
+    // Calculate position relative to the droppable area (the grid)
+    // active.rect.current.translated = { top, left, ... } of the dragged item
+    // over.rect = { top, left, ... } of the droppable container
+    const droppableRect = over?.rect;
+    const activeRect = active.rect.current.translated;
 
-      // Temporary cheat: Place at (5, 5) + random offset to avoid exact stacking
-      // Ideally we use modifiers or calculate local coordinates.
-      const x = Math.floor(Math.random() * 10) + 1;
-      const y = Math.floor(Math.random() * 10) + 1;
+    if (!droppableRect || !activeRect) return;
 
-      addBlock(blockData, x, y);
-    }
-  };
+    const relativeX = activeRect.left - droppableRect.left;
+    const relativeY = activeRect.top - droppableRect.top;
+
+    // Convert to grid units (40px)
+    // Math.max to prevent negative coordinates
+    const x = Math.max(0, Math.floor(relativeX / 40));
+    const y = Math.max(0, Math.floor(relativeY / 40));
+
+    addBlock(blockData, x, y);
+  }
+
 
   return (
     <DndContext onDragEnd={handleDragEnd}>

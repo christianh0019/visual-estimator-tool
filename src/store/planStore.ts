@@ -1,5 +1,6 @@
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { RoomBlock } from '../config/blocks';
 
 export interface PlacedBlock extends RoomBlock {
@@ -19,7 +20,7 @@ interface PlanState {
     resetPlan: () => void;
 }
 
-export const usePlanStore = create<PlanState>((set) => ({
+export const usePlanStore = create<PlanState>()(persist((set) => ({
     placedBlocks: [],
     totalCost: 0,
     totalSqFt: 0,
@@ -48,6 +49,8 @@ export const usePlanStore = create<PlanState>((set) => ({
     }),
 
     resetPlan: () => set({ placedBlocks: [], totalCost: 0, totalSqFt: 0 })
+}), {
+    name: 'builder-plan-storage',
 }));
 
 // Helper to recalculate totals

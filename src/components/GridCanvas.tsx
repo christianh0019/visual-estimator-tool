@@ -42,8 +42,8 @@ export const GridCanvas = () => {
     const placedBlocks = usePlanStore(state => state.placedBlocks);
 
     return (
-        <div ref={setNodeRef} className="min-h-screen bg-slate-50 p-20 pl-[22rem] overflow-auto">
-            <div className="relative w-[1600px] h-[1200px] bg-white shadow-sm border border-slate-200 grid-pattern rounded-lg">
+        <div className="min-h-screen bg-slate-50 p-20 pl-[22rem] overflow-auto">
+            <div ref={setNodeRef} className="relative w-[1600px] h-[1200px] bg-white shadow-sm border border-slate-200 grid-pattern rounded-lg">
                 {/* Render Placed Blocks */}
                 {placedBlocks.map(block => (
                     <PlacedItem
