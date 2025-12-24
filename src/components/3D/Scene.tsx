@@ -1,59 +1,26 @@
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
 import { CameraControls, Grid, ContactShadows, Environment } from '@react-three/drei';
 import { useDroppable } from '@dnd-kit/core';
 import { usePlanStore } from '../../store/planStore';
+import { WallDrawingManager } from './WallDrawingManager';
+import { ProceduralRoom } from './ProceduralRoom';
 import { RoomMesh } from './RoomMesh';
 import { useRef, useEffect } from 'react';
-import * as THREE from 'three';
 
 interface SceneProps {
     currentView: 'ISO' | 'TOP';
 }
 
 // Component to handle resolving 2D drops to 3D grid
-const DropResolver = () => {
-    const { camera, raycaster } = useThree();
-    const pendingDrop = usePlanStore(state => state.pendingDrop);
-    const setPendingDrop = usePlanStore(state => state.setPendingDrop);
-    const addBlock = usePlanStore(state => state.addBlock);
-    const activeFloor = usePlanStore(state => state.activeFloor);
-
-    useEffect(() => {
-        if (!pendingDrop) return;
-
-        // Convert client coordinates to normalized device coordinates (NDC)
-        const x = (pendingDrop.clientX / window.innerWidth) * 2 - 1;
-        const y = -(pendingDrop.clientY / window.innerHeight) * 2 + 1;
-
-        // Create a proper Vector2 for setFromCamera
-        const vector = new THREE.Vector2(x, y);
-        raycaster.setFromCamera(vector, camera);
-
-        // Intersect with a virtual ground plane at the correct height
-        const planeY = activeFloor * 1.2; // 1.2 is HEIGHT from RoomMesh
-        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
-        const target = new THREE.Vector3();
-
-        raycaster.ray.intersectPlane(plane, target);
-
-        if (target) {
-            const finalX = Math.max(0, Math.round(target.x - pendingDrop.block.dimensions.w / 2));
-            const finalY = Math.max(0, Math.round(target.z - pendingDrop.block.dimensions.h / 2));
-
-            addBlock(pendingDrop.block, finalX, finalY);
-        }
-
-        setPendingDrop(null); // Clear pending drop
-    }, [pendingDrop, camera, raycaster, addBlock, setPendingDrop, activeFloor]);
-
-    return null;
-}
+// DropResolver removed (replaced by Wall Drawing System)
 
 export const Scene = ({ currentView }: SceneProps) => {
     const { setNodeRef } = useDroppable({
         id: 'canvas',
     });
     const placedBlocks = usePlanStore(state => state.placedBlocks);
+    const rooms = usePlanStore(state => state.rooms);
+    const isDrawing = usePlanStore(state => state.isDrawing);
     const activeFloor = usePlanStore(state => state.activeFloor);
     const cameraControlsRef = useRef<CameraControls>(null);
 
@@ -76,7 +43,8 @@ export const Scene = ({ currentView }: SceneProps) => {
     return (
         <div ref={setNodeRef} className="w-full h-screen bg-slate-100">
             <Canvas shadows camera={{ position: [20, 20, 20], fov: 45 }}>
-                <DropResolver />
+                {/* DropResolver Removed */}
+                <WallDrawingManager />
                 <color attach="background" args={['#f8fafc']} />
 
                 {/* Lighting */}
@@ -115,16 +83,15 @@ export const Scene = ({ currentView }: SceneProps) => {
                     cellThickness={0.5}
                 />
 
-                {/* Render Blocks */}
-                <group>
-                    {placedBlocks.map(block => (
-                        <RoomMesh
-                            key={block.instanceId}
-                            block={block}
-                            isInteractive={true}
-                        />
-                    ))}
-                </group>
+                {/* Generated Rooms */}
+                {rooms.map(room => (
+                    <ProceduralRoom key={room.id} room={room} />
+                ))}
+
+                {/* Legacy Blocks (Keep for now if needed) */}
+                {placedBlocks.map(block => (
+                    <RoomMesh key={block.instanceId} block={block} isInteractive={!isDrawing} />
+                ))}
 
                 {/* Active Floor Indicator */}
                 {activeFloor === 1 && (
